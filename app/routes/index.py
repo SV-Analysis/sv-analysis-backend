@@ -25,6 +25,13 @@ def getAllRecords():
     query_result = dataService.getAllResult(post_data['cityId'])
     return json.dumps(query_result)
 
+@app.route('/regionquery',  methods=['POST'])
+def regionQuery():
+    post_data = json.loads(request.data.decode())
+    print(post_data)
+    query_result = dataService.queryRegion(post_data['cityId'], post_data['positions'])
+    return json.dumps('query test')
+
 
 if __name__ == '__main__':
     pass

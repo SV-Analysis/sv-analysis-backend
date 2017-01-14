@@ -27,6 +27,8 @@ class DataService():
         return self.base_conf
 
     def getAllResult(self, cityId):
+        # Hack
+        attrs = ['green', 'sky', 'road', 'building']
         client = MongoClient(HOST, PORT)
         db = client[DBNAME]
         collection_name = None
@@ -39,10 +41,42 @@ class DataService():
         for record in collection.find():
             lo = record['location'][1]
             la = record['location'][0]
-            resut_arr.append([lo, la])
+            max_num = -1
+            max_attr = None
+            for attr in attrs:
+                if max_num < record[attr]:
+                    max_num = record[attr]
+                    max_attr = attr
+            resut_arr.append([lo, la, max_attr])
 
         print(time.time() - start_time)
         return resut_arr
+
+    def queryRegion(self, cityId, positions):
+        # Hack
+
+        region_boundaries = [[position['lng'], position['lat']] for position in positions]
+        print('region', region_boundaries)
+
+        client = MongoClient(HOST, PORT)
+        db = client[DBNAME]
+        collection_name = None
+        for item in self.base_conf:
+            if item['id'] == cityId:
+                collection_name = item['result_c']
+        collection = db[collection_name]
+        resut_arr = []
+        start_time = time.time()
+        print(collection_name)
+        for record in collection.find({
+            'location': {
+                '$geoWithin': {
+                    '$polygon':
+                        region_boundaries
+                }
+            }
+        }):
+            print(record)
 
 # Hack
 dataService = DataService('app/conf/')

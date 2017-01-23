@@ -22,15 +22,15 @@ def getConfInfo():
 @app.route('/getallrecords',  methods=['POST'])
 def getAllRecords():
     post_data = json.loads(request.data.decode())
-    query_result = dataService.getAllResult(post_data['cityId'])
+    query_result = dataService.getAllResultImprove(post_data['cityId'])
     return json.dumps(query_result)
 
 @app.route('/regionquery',  methods=['POST'])
 def regionQuery():
     post_data = json.loads(request.data.decode())
-    print(post_data)
+
     query_result = dataService.queryRegion(post_data['cityId'], post_data['positions'])
-    return json.dumps('query test')
+    return json.dumps(query_result)
 
 
 if __name__ == '__main__':

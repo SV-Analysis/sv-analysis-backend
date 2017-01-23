@@ -1,5 +1,5 @@
-import json
 import time
+
 from pymongo import MongoClient
 
 # Warning: Should included into the config file
@@ -22,7 +22,6 @@ class DataService():
         # Conf file will be written into database
         self.base_conf = self.conf.read_configuration(conf_path)
 
-
     def getConfigJson(self):
         return self.base_conf
 
@@ -32,42 +31,62 @@ class DataService():
         client = MongoClient(HOST, PORT)
         db = client[DBNAME]
         collection_name = None
-        for item in self.base_conf:
+
+        confs = self.base_conf['conf']
+        for item in confs:
             if item['id'] == cityId:
                 collection_name = item['result_c']
         collection = db[collection_name]
         resut_arr = []
         start_time = time.time()
         for record in collection.find():
-            lo = record['location'][1]
-            la = record['location'][0]
+            lo = record['location'][0]
+            la = record['location'][1]
             max_num = -1
             max_attr = None
             for attr in attrs:
                 if max_num < record[attr]:
                     max_num = record[attr]
                     max_attr = attr
-            resut_arr.append([lo, la, max_attr])
-
+            resut_arr.append([la, lo, max_attr])
         print(time.time() - start_time)
         return resut_arr
 
-    def queryRegion(self, cityId, positions):
-        # Hack
-
-        region_boundaries = [[position['lng'], position['lat']] for position in positions]
-        print('region', region_boundaries)
-
+    def getAllResultImprove(self, cityId):
+        start_time = time.time()
         client = MongoClient(HOST, PORT)
         db = client[DBNAME]
         collection_name = None
-        for item in self.base_conf:
+        confs = self.base_conf['conf']
+        for item in confs:
+            if item['id'] == cityId:
+                collection_name = item['overall_result']
+        collection = db[collection_name]
+
+        split_result = []
+        for record in collection.find():
+            del record['_id']
+            split_result += record['seg']
+
+        print(time.time() - start_time)
+        return split_result
+
+    def queryRegion(self, cityId, positions):
+        # Hack
+        if len(positions) <= 2:
+            return
+        region_boundaries = [[position['lng'], position['lat']] for position in positions]
+        client = MongoClient(HOST, PORT)
+        db = client[DBNAME]
+        collection_name = None
+        confs = self.base_conf['conf']
+        for item in confs:
             if item['id'] == cityId:
                 collection_name = item['result_c']
         collection = db[collection_name]
         resut_arr = []
         start_time = time.time()
-        print(collection_name)
+
         for record in collection.find({
             'location': {
                 '$geoWithin': {
@@ -76,7 +95,14 @@ class DataService():
                 }
             }
         }):
-            print(record)
+            del record['_id']
+            resut_arr.append(record)
+        print(time.time() - start_time)
+        return {
+            'records': resut_arr,
+            'region': positions,
+            'cityId': cityId
+        }
 
 # Hack
 dataService = DataService('app/conf/')

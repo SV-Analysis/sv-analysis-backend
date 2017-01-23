@@ -1,8 +1,7 @@
 import json
 
-CONFIG_PATH = 'conf.csv'
-OUTPUT_PATH = ''
-
+CONFIG_PATH = 'conf/conf.csv'
+OUTPUT_PATH = 'output'
 class Configuration():
     def __init__(self):
         pass
@@ -32,22 +31,23 @@ class Configuration():
                 confs.append(record)
                 conf_line = f.readline()
 
-        with open(out_path + '/conf.json', 'w') as outfile:
-            json.dump(confs, outfile)
+        conf_obj = {'overall_c': 'overall_result_c', 'conf': confs}
+
+        with open(out_path + '/configuration.json', 'w') as outfile:
+            json.dump(conf_obj, outfile)
 
     def read_configuration(self, path):
         """
         Read configurations from json file
-        :param path: the conf.json files is from the dataService model
+        :param path:
         :return:
         """
-
-        with open(path + 'conf.json', 'r') as readfile:
+        with open(path + '/configuration.json', 'r') as readfile:
             conf = json.load(readfile)
             return conf
 
 
 if __name__ == "__main__":
     conf = Configuration()
-    # conf.generate_conf_json(CONFIG_PATH, OUTPUT_PATH)
-    print(conf.read_configuration(OUTPUT_PATH))
+    conf.generate_conf_json(CONFIG_PATH, OUTPUT_PATH)
+    # print conf.read_configuration(OUTPUT_PATH)

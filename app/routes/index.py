@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from app import app, mongo
+from app import app
 import json
 from flask import request
 

@@ -1,4 +1,8 @@
 .idea/
 *pyc
-app/static
 
+
+app/DataService/__pycache__/
+app/__pycache__/
+app/conf/__pycache__/
+app/routes/__pycache__/

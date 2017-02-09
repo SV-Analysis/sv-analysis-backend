@@ -18,7 +18,6 @@ class Configuration():
             index2schema = {}
             schema_arr = schema.split(',')
             length = len(schema_arr)
-
             for index in range(0, length):
                 index2schema[index] = schema_arr[index]
             conf_line = f.readline()
@@ -50,4 +49,4 @@ class Configuration():
 if __name__ == "__main__":
     conf = Configuration()
     conf.generate_conf_json(CONFIG_PATH, OUTPUT_PATH)
-    # print conf.read_configuration(OUTPUT_PATH)
+    print(conf.read_configuration(OUTPUT_PATH))

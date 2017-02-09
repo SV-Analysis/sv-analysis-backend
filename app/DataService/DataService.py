@@ -21,6 +21,8 @@ class DataService():
 
         # Conf file will be written into database
         self.base_conf = self.conf.read_configuration(conf_path)
+        print(self.base_conf);
+
 
     def getConfigJson(self):
         return self.base_conf
@@ -98,11 +100,33 @@ class DataService():
             del record['_id']
             resut_arr.append(record)
         print(time.time() - start_time)
+        client.close()
         return {
             'records': resut_arr,
             'region': positions,
             'cityId': cityId
         }
+    def queryStreetSets(self, cityId, startIndex, number):
+        client = MongoClient(HOST, PORT)
+        db = client[DBNAME]
+        collection_name = None
+        confs = self.base_conf['conf']
+        for item in confs:
+            if item['id'] == cityId:
+                collection_name = item['osm_street_collection']
+
+                way_collection = db[collection_name]
+        resut_arr = []
+
+        total_number = 0
+        for record in way_collection.find().sort('attr.len', -1).skip(startIndex):
+            if total_number >= number:
+                break
+            del record['_id']
+            resut_arr.append(record)
+            total_number += 1
+
+        return resut_arr
 
 # Hack
 dataService = DataService('app/conf/')

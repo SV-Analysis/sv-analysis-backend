@@ -32,6 +32,15 @@ def regionQuery():
     query_result = dataService.queryRegion(post_data['cityId'], post_data['positions'])
     return json.dumps(query_result)
 
+@app.route('/streetsetquery', methods=['POST'])
+def steetQuery():
+    post_data = json.loads(request.data.decode())
+    cityId = post_data['cityId']
+    startIndex = post_data['startIndex']
+    number = post_data['number']
+    query_data = dataService.queryStreetSets(cityId, startIndex, number)
+    return json.dumps(query_data);
+
 
 if __name__ == '__main__':
     pass

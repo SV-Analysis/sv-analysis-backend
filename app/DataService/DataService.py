@@ -106,6 +106,7 @@ class DataService():
             'region': positions,
             'cityId': cityId
         }
+
     def queryStreetSets(self, cityId, startIndex, number):
         client = MongoClient(HOST, PORT)
         db = client[DBNAME]
@@ -119,7 +120,7 @@ class DataService():
         resut_arr = []
 
         total_number = 0
-        for record in way_collection.find().sort('attr.len', -1).skip(startIndex):
+        for record in way_collection.find().sort('attr.img_len', -1).skip(startIndex):
             if total_number >= number:
                 break
             del record['_id']
@@ -128,6 +129,8 @@ class DataService():
 
         return resut_arr
 
+    def _queryNearbyImages(self, cityId, position, distance):
+        pass
 # Hack
 dataService = DataService('app/conf/')
 

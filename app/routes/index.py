@@ -2,9 +2,9 @@
 from app import app
 import json
 from flask import request
-
+from flask import send_file
 from app.DataService.DataService import dataService
-
+from flask import send_file
 
 @app.route('/')
 def index():
@@ -41,7 +41,17 @@ def steetQuery():
     query_data = dataService.queryStreetSets(cityId, startIndex, number)
     return json.dumps(query_data);
 
+@app.route('/getImage', methods=['GET', 'POST'])
+def getImages():
+    image_path = createImageLink(request.args.get('city'),
+                                 request.args.get('cid'),
+                                 request.args.get('iid'))
+    return send_file(image_path, mimetype='image/gif')
 
+def createImageLink(city, cid, iid):
+    folder = '../../res/';
+    all_path = folder + city + '/images/' + cid + '/' + iid
+    return all_path
 if __name__ == '__main__':
     pass
 

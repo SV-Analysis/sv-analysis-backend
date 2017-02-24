@@ -41,6 +41,15 @@ def steetQuery():
     query_data = dataService.queryStreetSets(cityId, startIndex, number)
     return json.dumps(query_data);
 
+@app.route('/adregionsetquery', methods=['POST'])
+def administrative_region_Query():
+    post_data = json.loads(request.data.decode())
+    cityId = post_data['cityId']
+    startIndex = post_data['startIndex']
+    number = post_data['number']
+    query_data = dataService.query_adregion_sets(cityId, startIndex, number)
+    return json.dumps(query_data)
+
 @app.route('/getImage', methods=['GET', 'POST'])
 def getImages():
     image_path = createImageLink(request.args.get('city'),

@@ -115,8 +115,9 @@ class DataService():
         for item in confs:
             if item['id'] == cityId:
                 collection_name = item['osm_street_collection']
-
                 way_collection = db[collection_name]
+        if collection_name == None:
+            return None
         resut_arr = []
 
         total_number = 0
@@ -128,6 +129,35 @@ class DataService():
             total_number += 1
 
         return resut_arr
+
+    def query_adregion_sets(self, cityId, startIndex, number):
+        client = MongoClient(HOST, PORT)
+        db = client[DBNAME]
+        collection_name = None
+        confs = self.base_conf['conf']
+        for item in confs:
+            if item['id'] == cityId:
+                collection_name = item['region_collection']
+                region_collection = db[collection_name]
+
+        if collection_name == None:
+            return None
+        result_arr = []
+
+        total_number = 0
+        for record in region_collection.find().skip(startIndex):
+            if total_number >= number:
+                break
+            img_len = 0
+            for images in record['imageList']:
+                img_len += len(images['images'])
+            record['img_len'] = img_len
+            del record['_id']
+            # del record['imageList']
+
+            result_arr.append(record)
+
+        return result_arr
 
     def _queryNearbyImages(self, cityId, position, distance):
         pass

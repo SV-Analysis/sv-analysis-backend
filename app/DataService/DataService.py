@@ -118,19 +118,23 @@ class DataService():
                 way_collection = db[collection_name]
         if collection_name == None:
             return None
-        resut_arr = []
+        result_arr = []
 
         total_number = 0
         for record in way_collection.find().sort('attr.img_len', -1).skip(startIndex):
             if total_number >= number:
                 break
             del record['_id']
-            resut_arr.append(record)
+            result_arr.append(record)
             total_number += 1
 
-        return resut_arr
+        return {
+            "records": result_arr,
+            "total": way_collection.count()
+        }
 
     def query_adregion_sets(self, cityId, startIndex, number):
+        start_time = time.time()
         client = MongoClient(HOST, PORT)
         db = client[DBNAME]
         collection_name = None
@@ -154,10 +158,16 @@ class DataService():
             record['img_len'] = img_len
             del record['_id']
             # del record['imageList']
-
+            record['imageList'] = []
             result_arr.append(record)
-
-        return result_arr
+            total_number += 1
+        end_time = time.time()
+        print(end_time - start_time)
+        print(number, total_number, region_collection.count())
+        return {
+            "records": result_arr,
+            "total": region_collection.count()
+        }
 
     def _queryNearbyImages(self, cityId, position, distance):
         pass

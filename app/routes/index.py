@@ -5,6 +5,7 @@ from flask import request
 from flask import send_file
 from app.DataService.DataService import dataService
 from flask import send_file
+import time
 
 @app.route('/')
 def index():
@@ -38,7 +39,10 @@ def steetQuery():
     cityId = post_data['cityId']
     startIndex = post_data['startIndex']
     number = post_data['number']
-    query_data = dataService.queryStreetSets(cityId, startIndex, number)
+    condition = post_data['condition']
+    start = time.time()
+    query_data = dataService.queryStreetSets(cityId, startIndex, number, condition)
+    print(time.time() - start)
     return json.dumps(query_data);
 
 @app.route('/adregionsetquery', methods=['POST'])
@@ -47,7 +51,9 @@ def administrative_region_Query():
     cityId = post_data['cityId']
     startIndex = post_data['startIndex']
     number = post_data['number']
-    query_data = dataService.query_adregion_sets(cityId, startIndex, number)
+    condition = post_data['condition']
+    query_data = dataService.query_adregion_sets(cityId, startIndex, number, condition)
+
     return json.dumps(query_data)
 
 @app.route('/getImage', methods=['GET', 'POST'])
@@ -61,6 +67,28 @@ def createImageLink(city, cid, iid):
     folder = '../../res/';
     all_path = folder + city + '/images/' + cid + '/' + iid
     return all_path
+
+@app.route('/statisticsquery',  methods=['POST'])
+def get_statistics():
+    print('city')
+    post_data = json.loads(request.data.decode())
+    cityId = post_data['cityId']
+
+    type = post_data['type']
+    result = dataService.query_statistics(cityId, type)
+
+    return json.dumps(result)
+
+@app.route('/allstatisticsquery',  methods=['POST'])
+def get_all_statistics():
+    print('all statistics')
+    start = time.time()
+    result = dataService.query_all_statistics()
+    print('Use time ', time.time() - start)
+    return json.dumps(result)
+
+
+
 if __name__ == '__main__':
     pass
 

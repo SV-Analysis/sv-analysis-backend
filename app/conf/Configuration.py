@@ -45,6 +45,9 @@ class Configuration():
             conf = json.load(readfile)
             return conf
 
+    # def provide
+
+
 
 if __name__ == "__main__":
     conf = Configuration()

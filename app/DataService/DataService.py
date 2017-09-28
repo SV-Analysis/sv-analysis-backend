@@ -21,7 +21,10 @@ class DataService():
 
         # Conf file will be written into database
         self.base_conf = self.conf.read_configuration(conf_path)
-        print(self.base_conf);
+        self.query_statistics('london', 'region')
+
+
+
 
 
     def getConfigJson(self):
@@ -107,7 +110,7 @@ class DataService():
             'cityId': cityId
         }
 
-    def queryStreetSets(self, cityId, startIndex, number):
+    def queryStreetSets(self, cityId, startIndex, number, condition):
         client = MongoClient(HOST, PORT)
         db = client[DBNAME]
         collection_name = None
@@ -119,9 +122,15 @@ class DataService():
         if collection_name == None:
             return None
         result_arr = []
-
+        smallest_img_number = 40
         total_number = 0
-        for record in way_collection.find().sort('attr.img_len', -1).skip(startIndex):
+        query_condition = ''
+        if condition == 'img_len':
+            query_condition = 'attr.'+ 'img_len'
+        else:
+            query_condition = 'statistics.' + condition
+        count = way_collection.find({'attr.img_len': {'$gt': smallest_img_number}}).count()
+        for record in way_collection.find({'attr.img_len': {'$gt': smallest_img_number}}).sort(query_condition, -1).skip(startIndex):
             if total_number >= number:
                 break
             del record['_id']
@@ -130,35 +139,41 @@ class DataService():
 
         return {
             "records": result_arr,
-            "total": way_collection.count()
+            "total": count
         }
 
-    def query_adregion_sets(self, cityId, startIndex, number):
+    def query_adregion_sets(self, cityId, startIndex, number, condition):
         start_time = time.time()
         client = MongoClient(HOST, PORT)
         db = client[DBNAME]
         collection_name = None
         confs = self.base_conf['conf']
+        query_condition = 'statistics.' + condition
+        region_collection = None
         for item in confs:
             if item['id'] == cityId:
                 collection_name = item['region_collection']
                 region_collection = db[collection_name]
 
-        if collection_name == None:
-            return None
+                # return None
         result_arr = []
 
         total_number = 0
-        for record in region_collection.find().skip(startIndex):
+        for record in region_collection.find().sort(query_condition, -1).skip(startIndex):
             if total_number >= number:
                 break
             img_len = 0
             for images in record['imageList']:
                 img_len += len(images['images'])
             record['img_len'] = img_len
+
             del record['_id']
-            # del record['imageList']
+            del record['image_list']
+            del record['streets_ids']
+            # record['subRegion'] = []
+
             record['imageList'] = []
+
             result_arr.append(record)
             total_number += 1
         end_time = time.time()
@@ -171,6 +186,114 @@ class DataService():
 
     def _queryNearbyImages(self, cityId, position, distance):
         pass
+    def query_statistics(self, cityId, type):
+        client = MongoClient(HOST, PORT)
+        db = client[DBNAME]
+        collection_attr = None
+        if type == 'region':
+            collection_attr = 'region_collection'
+        elif type == 'street':
+            collection_attr = 'osm_street_collection'
+
+        confs = self.base_conf['conf']
+
+        collection = None
+        for item in confs:
+            if item['id'] == cityId:
+                collection_name = item[collection_attr]
+                collection = db[collection_name]
+
+        if collection == None:
+            return None
+
+        result = []
+
+        for record in collection.find():
+            id = None
+            if 'rid' in record:
+                id = record['rid']
+            else:
+                id = record['id']
+
+            statistics = record['statistics']
+            if statistics == None:
+                continue
+            statistics['id'] = id
+            statistics['cityId'] = cityId
+            #  hack
+            rd = {
+                'record':{
+                    'lv': record['lv'], 'sv': record['sv'],
+                    'statistics': statistics, 'standard': record['standard']},
+                'cityObj': {'id':cityId}}
+            # statistics['record'] =
+            result.append(rd)
+        client.close()
+        return result
+
+    # def query_all_statistics(self):
+    #
+    #     client = MongoClient(HOST, PORT)
+    #     db = client[DBNAME]
+    #     collection_attr = None
+    #     collection_attr = 'region_collection'
+    #     confs = self.base_conf['conf']
+    #     result = []
+    #
+    #     for item in confs:
+    #         collection_name = item[collection_attr]
+    #         collection = db[collection_name]
+    #         _result = []
+    #         _sum_statistics = {}
+    #         _number = collection.count()
+    #         for record in collection.find():
+    #             id = None
+    #             if 'rid' in record:
+    #                 id = record['rid']
+    #             else:
+    #                 id = record['id']
+    #
+    #             statistics = record['statistics']
+    #             if statistics == None:
+    #                 continue
+    #             for attr in statistics:
+    #                 if attr not in _sum_statistics:
+    #                     _sum_statistics[attr] = 0
+    #                 _sum_statistics[attr] += statistics[attr]
+    #
+    #
+    #             statistics['id'] = id
+    #             statistics['cityId'] = item['id']
+    #             #  hack
+    #             rd = {
+    #                 'record': {
+    #                     'lv': record['lv'], 'sv': record['sv'],
+    #                     'statistics': statistics, 'standard': record['standard']},
+    #                 'cityObj': {'id': item['id']}}
+    #             _result.append(rd)
+    #         for attr in _sum_statistics:
+    #             _sum_statistics[attr] = _sum_statistics[attr] / _number
+    #         # attribute name hack
+    #         result.append({
+    #             'id': item['id'],
+    #             'city': item['id'],
+    #             'streets': _result,
+    #             'record': {'statistics': _sum_statistics}
+    #         })
+    #     return result
+
+    def query_all_statistics(self):
+        client = MongoClient(HOST, PORT)
+        db = client[DBNAME]
+        collection_attr = 'all_city_statistics'
+        collection = db[collection_attr]
+        result = []
+        for record in collection.find():
+            print(record['id'])
+            del record['_id']
+            result.append(record)
+        return result
+
 # Hack
 dataService = DataService('app/conf/')
 
